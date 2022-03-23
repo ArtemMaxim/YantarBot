@@ -1,0 +1,54 @@
+import requests 
+import config 
+from aiogram import Bot, types 
+from aiogram.dispatcher import Dispatcher 
+from aiogram.utils import executor 
+bot = Bot(config.TOKEN) 
+dp = Dispatcher(bot) 
+@dp.message_handler(commands=["start"]) 
+async def start_comand(message: types.Message): 
+ await message.reply("Вас приветствует Ботик Янтаря!") 
+@dp.message_handler(commands=["help"]) 
+async def start_comand(message: types.Message): 
+ await message.reply("Поздравляем, Вы стали счастливым (или не очень) пользователем Ботика Янтаря (Yantar's botik). \n " 
+ "Он показывает (по крайней мере должен) погоду в городе, о котором Вы хотите узнать. \n " 
+ "Название города должно быть введено на английском языке (Электросталь -> Elektrostal). \n" 
+ "!!!НЕ ЗАБЫВАЙТЕ ПРО МОЛИТВУ ДУХУ МАШИНЫ!!!" 
+ ) 
+@dp.message_handler() 
+async def get_weather(message: types.Message): 
+ code_to_smile = { 
+ "Clear": "\U00002600 Ясно \U00002600", 
+ "Clouds": "\U00002601 Облачно \U00002601", 
+ "Rain": "\U00002614 Дождь \U00002614", 
+ "Drizzle": "\U00002614 Дождь \U00002614", 
+ "Thunderstorm": "\U000026A4 Гроза \U000026A4", 
+ "Snow": "\U0001F328 Снег \U0001F328", 
+ "Mist": "\U0001F328 Туман \U0001F32B", 
+ } 
+ try: 
+ r = requests.get( 
+ f"http://api.openweathermap.org/data/2.5/weather?q={message.text}&appid={config.Weather}&units=metric" 
+ ) 
+ data=r.json() 
+ city = data["name"] 
+ cur_weather = data["main"]["temp"] 
+ weather_descripion = data["weather"][0]["main"] 
+ if weather_descripion in code_to_smile: 
+ wd=code_to_smile[weather_descripion] 
+ else: 
+ wd="Не удалось определить" 
+ 
+ humidity = data["main"]["humidity"] 
+ wind = data["wind"]["speed"] 
+ await message.reply(f"___Погода в городе: {city}___\n" 
+ f" {wd}\n" 
+ f"Температура {cur_weather} C\n" 
+ f"Влажность: {humidity} %\n" 
+ f"Ветер: {wind} м.с\n" 
+ f"***Спасибо за использование***") 
+ except: 
+ await message.reply(f"Проверьте название города") 
+ 
+if __name__=='__main__': 
+ executor.start_polling(dp)
